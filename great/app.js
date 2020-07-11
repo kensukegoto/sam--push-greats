@@ -7,6 +7,7 @@ let resBody;
 exports.lambdaHandler = async (event, context, callback) => {
 
   let sitename;
+  let params;
 
   try {
 
@@ -14,9 +15,32 @@ exports.lambdaHandler = async (event, context, callback) => {
       sitename = event.queryStringParameters && event.queryStringParameters.name ? event.queryStringParameters.name.trim() : "";
 
       if(sitename === "") throw new Error('Sitename wasn\'t included.');
-      
+
       // DBから対象サイトの件数取得
-      const count = 5;
+      params = {
+        TableName: 'greats',
+        IndexName: 'name-index',
+        ExpressionAttributeNames:{'#n': 'name'},
+        ExpressionAttributeValues:{':val': sitename},
+        KeyConditionExpression: '#n = :val'
+      };
+
+      const count = await new Promise((resolve,reject) => {
+
+        docClient.query(params, function(err, data){
+          if(err) return reject(err);
+
+          resolve(data.Items.length);
+
+        });
+
+      })
+
+      resStatus = 200;
+      resBody = {
+        count
+      }
+    
     };
 
     if(event.httpMethod === "POST"){
@@ -27,7 +51,7 @@ exports.lambdaHandler = async (event, context, callback) => {
 
       if(sitename === "") throw new Error('Sitename wasn\'t included.');
 
-      const params = {
+      params = {
         TableName: 'greats',
         Item:{
           "timestamp": new Date().getTime().toString(),
