@@ -17,6 +17,8 @@ Resources:
       CodeUri: great/
       Handler: app.lambdaHandler
       Runtime: nodejs12.x
+      Policies:
+        - AmazonDynamoDBFullAccess
       Events:
         GetGreat:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -28,6 +30,21 @@ Resources:
           Properties:
             Path: /post-great
             Method: post
+  GreatsDynamoDbTbl:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: greats
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: timestamp
+          KeyType: HASH
+        - AttributeName: name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
